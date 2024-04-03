@@ -4,6 +4,7 @@ import 'package:dots_indicator/dots_indicator.dart';
 import 'package:milckoapk/Screens/map_screeen.dart';
 import 'package:milckoapk/providers/location_provider.dart';
 import 'package:milckoapk/widgets/constants.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 // import 'package:milcko_apk/constants.dart';
 
@@ -93,15 +94,57 @@ class _OnBaordScreenState extends State<OnBaordScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent,),
             onPressed: () async {
-              await locationData.getCurrentPosition();
-              if(locationData.premissionAllowed == true) {
-                Navigator.pushReplacementNamed(context, MapScreen.id);
+              setState(() {
+                locationData.loading = true;
+              });
+
+              var permissionStatus = await Permission.location.request();
+              if (permissionStatus.isGranted) {
+                await locationData.getCurrentPosition();
+                if (locationData.premissionAllowed == true) {
+                  Navigator.pushReplacementNamed(context, MapScreen.id);
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Location Permission Required'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('To set your delivery location, please grant the location permission.'),
+                            SizedBox(height: 10),
+                            locationData.loading
+                                ? CircularProgressIndicator()
+                                : SizedBox(),
+                          ],
+                        ),
+                        // actions: <Widget>[
+                        //   TextButton(
+                        //     onPressed: () {
+                        //       Navigator.of(context).pop();
+                        //       // Open app settings
+                        //       openAppSettings();
+                        //     },
+                        //     child: Text('OK'),
+                        //   ),
+                        // ],
+                      );
+                    },
+                  );
+                }
+              } else if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
+                // Handle cases when location permission is denied or permanently denied
+                // You can provide user-friendly messages here
               }
-              else{
-                print('PERMISSION NOT ALLOWED');
-              }
+
+              setState(() {
+                locationData.loading = false;
+              });
             },
-            child: const Text('Set Delivery Location',style: TextStyle(color: Colors.white),)),
+            child: const Text('Set Delivery Location', style: TextStyle(color: Colors.white)),
+          ),
+
           const SizedBox(height: 40),
           const SizedBox(height: 50),
         ],

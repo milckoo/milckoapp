@@ -7,6 +7,7 @@ class LocationProvider with ChangeNotifier{
   double? latitude;
   double? longitude;
   bool premissionAllowed = false;
+  bool loading = false;
 
   // ignore: non_constant_identifier_names
   Future<void> getCurrentPosition() async {
